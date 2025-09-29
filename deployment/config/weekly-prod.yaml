@@ -1,0 +1,85 @@
+# Configuración de producción para weekly-summary
+# Optimizada para resumen semanal automático
+
+# Días de historial para cálculos semanales
+lookback_days: 300
+
+# Tickers extendidos para resumen semanal
+tickers:
+  # Acciones principales US
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "NVDA"
+    provider: "yfinance"
+    alias: "NVIDIA Corp."
+  - symbol: "AMZN"
+    provider: "yfinance"
+    alias: "Amazon.com Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  - symbol: "META"
+    provider: "yfinance"
+    alias: "Meta Platforms Inc."
+  
+  # Más acciones para resumen completo
+  - symbol: "BRK-B"
+    provider: "yfinance"
+    alias: "Berkshire Hathaway Inc."
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase & Co."
+  - symbol: "V"
+    provider: "yfinance"
+    alias: "Visa Inc."
+  
+  # ETFs principales
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "SPDR S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "Invesco QQQ Trust"
+  - symbol: "IWM"
+    provider: "yfinance"
+    alias: "iShares Russell 2000 ETF"
+  
+  # Índices principales
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+  - symbol: "^DJI"
+    provider: "yfinance"
+    alias: "Dow Jones Industrial Average"
+  - symbol: "^IXIC"
+    provider: "yfinance"
+    alias: "NASDAQ Composite"
+
+# Configuración de retornos para resumen semanal
+returns:
+  # Ventanas fijas para weekly-summary
+  windows: [1, 5, 10, 20]
+  # No necesita thresholds para resúmenes
+
+# Configuración de alertas para resumen semanal
+alerts:
+  # Configuración de Telegram
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+    parse_mode: "HTML"
+  
+  # Configuración para resumen semanal
+  weekly_summary:
+    enabled: true

@@ -1,0 +1,88 @@
+# Configuración de producción para Alertio
+# Variables de entorno: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+# Días de historial a obtener para cálculos
+lookback_days: 400
+
+# Lista de tickers a monitorear - ajusta según tus preferencias
+tickers:
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "NVDA"
+    provider: "yfinance"
+    alias: "NVIDIA Corp."
+  - symbol: "AMZN"
+    provider: "yfinance"
+    alias: "Amazon.com Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  - symbol: "META"
+    provider: "yfinance"
+    alias: "Meta Platforms Inc."
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "SPDR S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "Invesco QQQ Trust"
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+
+# Configuración de retornos
+returns:
+  # Ventanas de tiempo para calcular retornos (en días)
+  windows: [1, 5, 10, 20]
+  
+  # Umbrales para generar alertas - optimizados para producción
+  thresholds:
+    - window: 1
+      min_threshold: -0.04  # Alerta si cae más del 4% en 1 día
+      max_threshold: 0.04   # Alerta si sube más del 4% en 1 día
+    - window: 5
+      min_threshold: -0.08  # Alerta si cae más del 8% en 5 días
+      max_threshold: 0.08   # Alerta si sube más del 8% en 5 días
+    - window: 10
+      min_threshold: -0.12  # Alerta si cae más del 12% en 10 días
+      max_threshold: 0.12   # Alerta si sube más del 12% en 10 días
+    - window: 20
+      min_threshold: -0.18  # Alerta si cae más del 18% en 20 días
+      max_threshold: 0.18   # Alerta si sube más del 18% en 20 días
+
+# Configuración de alertas
+alerts:
+  # Cooldown global por defecto (días) - más conservador en producción
+  cooldown_days: 3
+  
+  # Configuración de Telegram
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"  # Variable de entorno obligatoria
+    chat_id: "${TELEGRAM_CHAT_ID}"      # Variable de entorno obligatoria
+    parse_mode: "HTML"
+  
+  # Configuración específica para alertas de caídas
+  drop_alerts:
+    enabled: true
+    cooldown_days: 2  # Alertas de caída más frecuentes
+  
+  # Configuración específica para alertas de subidas
+  rise_alerts:
+    enabled: true
+    cooldown_days: 5  # Alertas de subida menos frecuentes
+  
+  # Configuración para resumen semanal
+  weekly_summary:
+    enabled: true
+    cooldown_days: 7  # Una vez por semana

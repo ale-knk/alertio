@@ -1,0 +1,92 @@
+# Configuración de producción para daily-run
+# Optimizada para ejecución diaria automática via cron
+
+# Días de historial para cálculos (optimizado para producción)
+lookback_days: 200
+
+# Tickers principales para monitoreo diario
+tickers:
+  # Acciones principales US
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "NVDA"
+    provider: "yfinance"
+    alias: "NVIDIA Corp."
+  - symbol: "AMZN"
+    provider: "yfinance"
+    alias: "Amazon.com Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  - symbol: "META"
+    provider: "yfinance"
+    alias: "Meta Platforms Inc."
+  
+  # ETFs principales
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "SPDR S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "Invesco QQQ Trust"
+  
+  # Índices y volatilidad
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+
+# Configuración de retornos
+returns:
+  # Ventanas de tiempo para calcular retornos
+  windows: [1, 5, 10, 20]
+  
+  # Umbrales para alertas (más conservadores para producción)
+  thresholds:
+    - window: 1
+      min_threshold: -0.04  # Alerta si cae más del 4% en 1 día
+      max_threshold: 0.04   # Alerta si sube más del 4% en 1 día
+    - window: 5
+      min_threshold: -0.07  # Alerta si cae más del 7% en 5 días
+      max_threshold: 0.07   # Alerta si sube más del 7% en 5 días
+    - window: 10
+      min_threshold: -0.10  # Alerta si cae más del 10% en 10 días
+      max_threshold: 0.10   # Alerta si sube más del 10% en 10 días
+    - window: 20
+      min_threshold: -0.15  # Alerta si cae más del 15% en 20 días
+      max_threshold: 0.15   # Alerta si sube más del 15% en 20 días
+
+# Configuración de alertas para producción
+alerts:
+  # Cooldown más largo para evitar spam
+  cooldown_days: 3
+  
+  # Configuración de Telegram
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+    parse_mode: "HTML"
+  
+  # Configuración específica para alertas de caídas
+  drop_alerts:
+    enabled: true
+    cooldown_days: 2  # Cooldown más corto para caídas importantes
+  
+  # Configuración específica para alertas de subidas
+  rise_alerts:
+    enabled: true
+    cooldown_days: 4  # Cooldown más largo para subidas
+  
+  # Configuración para resumen semanal (deshabilitado en daily)
+  weekly_summary:
+    enabled: false

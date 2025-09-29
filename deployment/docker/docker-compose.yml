@@ -1,0 +1,38 @@
+# Docker Compose simplificado para Alertio
+version: '3.8'
+
+services:
+  alertio:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
+    image: alertio:v2
+    container_name: alertio
+    restart: unless-stopped
+    
+    # Volúmenes - datos persistentes
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    
+    # Variables de entorno
+    environment:
+      - TZ=Europe/Madrid
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    
+    # Límites de recursos
+    mem_limit: 512m
+    cpus: 0.5
+    
+    # Configuración de logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Sin comando por defecto - se ejecuta via cron
+    # Para ejecutar manualmente: docker-compose run --rm alertio [comando]
+    command: ["tail", "-f", "/dev/null"]  # Mantener container vivo para cron
+
