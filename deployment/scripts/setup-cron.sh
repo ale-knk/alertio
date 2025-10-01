@@ -48,19 +48,24 @@ crontab -l 2>/dev/null | grep -v 'alertio' > "$TEMP_CRON" || true
 
 # Añadir nuevos cron jobs
 cat >> "$TEMP_CRON" << EOF
-# ===== CONFIGURACIÓN DE PRUEBAS (cada minuto) =====
-# Alertio - Daily run: cada minuto para pruebas
-* * * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
+# # ===== CONFIGURACIÓN DE PRUEBAS (cada minuto) =====
+# # Alertio - Daily run: cada minuto para pruebas
+# * * * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
 
-# Alertio - Weekly summary: cada minuto para pruebas
-* * * * * $REMOTE_DIR/deployment/scripts/run-weekly.sh
+# # Alertio - Weekly summary: cada minuto para pruebas
+# * * * * * $REMOTE_DIR/deployment/scripts/run-weekly.sh
 
-# ===== CONFIGURACIÓN DE PRODUCCIÓN (comentada) =====
-# Alertio - Daily run: todos los días a las 9:00 AM (Europe/Madrid)
-# 0 9 * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
+# ===== CONFIGURACIÓN DE PRODUCCIÓN =====
+# Alertio - Daily run: 3 veces al día sincronizado con mercados americanos
+# 8:00 AM Madrid - Análisis previo (2:00 AM ET, mercado cerrado)
+0 8 * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
+# 4:30 PM Madrid - Post-apertura (10:30 AM ET, 1h después de apertura)
+30 16 * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
+# 10:00 PM Madrid - Post-cierre (4:00 PM ET, 30min después de cierre)
+0 22 * * * $REMOTE_DIR/deployment/scripts/run-daily.sh
 
-# Alertio - Weekly summary: domingos a las 10:00 AM (Europe/Madrid)  
-# 0 10 * * 0 $REMOTE_DIR/deployment/scripts/run-weekly.sh
+# Alertio - Weekly summary: domingos a las 10:00 AM (Europe/Madrid)
+0 10 * * 0 $REMOTE_DIR/deployment/scripts/run-weekly.sh
 EOF
 
 # Instalar nuevo crontab para root (más simple)
@@ -76,18 +81,3 @@ crontab -l | grep -A 5 -B 5 'alertio' || crontab -l
 
 echo
 success "🎉 ¡Configuración de cron completada!"
-echo
-warn "📝 HORARIOS CONFIGURADOS:"
-echo "  • Daily run:      CADA MINUTO (modo pruebas)"
-echo "  • Weekly summary: CADA MINUTO (modo pruebas)"
-echo "  • Zona horaria:   Europe/Madrid (configurada en Docker)"
-echo
-warn "⚠️  MODO PRUEBAS ACTIVO:"
-echo "  • Ambos jobs se ejecutan cada minuto"
-echo "  • Para producción, edita el script y descomenta las líneas de producción"
-echo
-warn "🔧 COMANDOS ÚTILES:"
-echo "  • Ver cron jobs:    crontab -l"
-echo "  • Editar cron:      crontab -e"
-echo "  • Logs diarios:     tail -f $REMOTE_DIR/logs/daily.log"
-echo "  • Logs semanales:   tail -f $REMOTE_DIR/logs/weekly.log"

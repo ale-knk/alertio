@@ -62,8 +62,27 @@ returns:
 
 # Configuración de alertas
 alerts:
-  # Cooldown global por defecto (días) - más conservador en producción
-  cooldown_days: 3
+  # Sistema de cooldown inteligente
+  cooldown:
+    base_days: 3  # Cooldown base global
+    
+    # Cooldowns por magnitud del movimiento
+    magnitude_cooldowns:
+      small: 1    # < 5%: 1 día
+      medium: 3   # 5-15%: 3 días
+      large: 7    # > 15%: 7 días
+    
+    # Cooldowns por ventana de tiempo (en días)
+    window_cooldowns:
+      1: 0.5   # 1 día = 12 horas
+      5: 2     # 5 días = 2 días
+      10: 3    # 10 días = 3 días
+      20: 7    # 20 días = 7 días
+    
+    # Cooldown progresivo
+    progressive_enabled: true
+    progressive_multiplier: 0.5  # Incremento por alerta consecutiva
+    max_progressive_multiplier: 3.0  # Máximo multiplicador
   
   # Configuración de Telegram
   telegram:
@@ -75,14 +94,11 @@ alerts:
   # Configuración específica para alertas de caídas
   drop_alerts:
     enabled: true
-    cooldown_days: 2  # Alertas de caída más frecuentes
   
   # Configuración específica para alertas de subidas
   rise_alerts:
     enabled: true
-    cooldown_days: 5  # Alertas de subida menos frecuentes
   
   # Configuración para resumen semanal
   weekly_summary:
     enabled: true
-    cooldown_days: 7  # Una vez por semana

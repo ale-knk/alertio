@@ -3,10 +3,10 @@
 
 # Días de historial para cálculos (optimizado para producción)
 lookback_days: 200
-
-# Tickers principales para monitoreo diario
 tickers:
-  # Acciones principales US
+  # ======================
+  # ACCIONES USA — TECNOLOGÍA
+  # ======================
   - symbol: "AAPL"
     provider: "yfinance"
     alias: "Apple Inc."
@@ -28,23 +28,340 @@ tickers:
   - symbol: "META"
     provider: "yfinance"
     alias: "Meta Platforms Inc."
-  
-  # ETFs principales
+  - symbol: "AVGO"
+    provider: "yfinance"
+    alias: "Broadcom Inc."
+  - symbol: "ADBE"
+    provider: "yfinance"
+    alias: "Adobe Inc."
+  - symbol: "CRM"
+    provider: "yfinance"
+    alias: "Salesforce Inc."
+  - symbol: "AMD"
+    provider: "yfinance"
+    alias: "Advanced Micro Devices"
+  - symbol: "INTC"
+    provider: "yfinance"
+    alias: "Intel Corp."
+  - symbol: "IBM"
+    provider: "yfinance"
+    alias: "International Business Machines"
+  - symbol: "QCOM"
+    provider: "yfinance"
+    alias: "QUALCOMM Inc."
+  - symbol: "ASML"
+    provider: "yfinance"
+    alias: "ASML Holding NV (ADR)"
+
+  # ===========================
+  # ACCIONES USA — COM SERVICES
+  # ===========================
+  - symbol: "NFLX"
+    provider: "yfinance"
+    alias: "Netflix Inc."
+  - symbol: "DIS"
+    provider: "yfinance"
+    alias: "The Walt Disney Company"
+  - symbol: "CMCSA"
+    provider: "yfinance"
+    alias: "Comcast Corp."
+  - symbol: "T"
+    provider: "yfinance"
+    alias: "AT&T Inc."
+  - symbol: "VZ"
+    provider: "yfinance"
+    alias: "Verizon Communications"
+  - symbol: "TMUS"
+    provider: "yfinance"
+    alias: "T-Mobile US"
+
+  # ===============================
+  # ACCIONES USA — CONSUMER DISC.
+  # ===============================
+  - symbol: "HD"
+    provider: "yfinance"
+    alias: "Home Depot"
+  - symbol: "MCD"
+    provider: "yfinance"
+    alias: "McDonald's Corp."
+  - symbol: "SBUX"
+    provider: "yfinance"
+    alias: "Starbucks Corp."
+  - symbol: "NKE"
+    provider: "yfinance"
+    alias: "Nike Inc."
+  - symbol: "BKNG"
+    provider: "yfinance"
+    alias: "Booking Holdings"
+  - symbol: "ABNB"
+    provider: "yfinance"
+    alias: "Airbnb Inc."
+  - symbol: "TGT"
+    provider: "yfinance"
+    alias: "Target Corp."
+  - symbol: "GM"
+    provider: "yfinance"
+    alias: "General Motors"
+  - symbol: "F"
+    provider: "yfinance"
+    alias: "Ford Motor Company"
+
+  # ===============================
+  # ACCIONES USA — CONSUMER STAPLES
+  # ===============================
+  - symbol: "WMT"
+    provider: "yfinance"
+    alias: "Walmart Inc."
+  - symbol: "COST"
+    provider: "yfinance"
+    alias: "Costco Wholesale"
+  - symbol: "PG"
+    provider: "yfinance"
+    alias: "Procter & Gamble"
+  - symbol: "KO"
+    provider: "yfinance"
+    alias: "Coca-Cola"
+  - symbol: "PEP"
+    provider: "yfinance"
+    alias: "PepsiCo Inc."
+  - symbol: "PM"
+    provider: "yfinance"
+    alias: "Philip Morris International"
+
+  # ===========================
+  # ACCIONES USA — HEALTH CARE
+  # ===========================
+  - symbol: "LLY"
+    provider: "yfinance"
+    alias: "Eli Lilly"
+  - symbol: "UNH"
+    provider: "yfinance"
+    alias: "UnitedHealth Group"
+  - symbol: "JNJ"
+    provider: "yfinance"
+    alias: "Johnson & Johnson"
+  - symbol: "MRK"
+    provider: "yfinance"
+    alias: "Merck & Co."
+  - symbol: "PFE"
+    provider: "yfinance"
+    alias: "Pfizer Inc."
+  - symbol: "ABBV"
+    provider: "yfinance"
+    alias: "AbbVie Inc."
+  - symbol: "TMO"
+    provider: "yfinance"
+    alias: "Thermo Fisher Scientific"
+
+  # ===========================
+  # ACCIONES USA — FINANCIALS
+  # ===========================
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "BAC"
+    provider: "yfinance"
+    alias: "Bank of America"
+  - symbol: "WFC"
+    provider: "yfinance"
+    alias: "Wells Fargo"
+  - symbol: "C"
+    provider: "yfinance"
+    alias: "Citigroup Inc."
+  - symbol: "GS"
+    provider: "yfinance"
+    alias: "Goldman Sachs"
+  - symbol: "MS"
+    provider: "yfinance"
+    alias: "Morgan Stanley"
+  - symbol: "BLK"
+    provider: "yfinance"
+    alias: "BlackRock Inc."
+  - symbol: "BRK-B"
+    provider: "yfinance"
+    alias: "Berkshire Hathaway (B)"
+  - symbol: "V"
+    provider: "yfinance"
+    alias: "Visa Inc."
+  - symbol: "MA"
+    provider: "yfinance"
+    alias: "Mastercard Inc."
+  - symbol: "AXP"
+    provider: "yfinance"
+    alias: "American Express"
+
+  # ===========================
+  # ACCIONES USA — INDUSTRIALS
+  # ===========================
+  - symbol: "CAT"
+    provider: "yfinance"
+    alias: "Caterpillar Inc."
+  - symbol: "DE"
+    provider: "yfinance"
+    alias: "Deere & Company"
+  - symbol: "BA"
+    provider: "yfinance"
+    alias: "Boeing Company"
+  - symbol: "GE"
+    provider: "yfinance"
+    alias: "GE Aerospace"
+  - symbol: "HON"
+    provider: "yfinance"
+    alias: "Honeywell International"
+  - symbol: "LMT"
+    provider: "yfinance"
+    alias: "Lockheed Martin"
+  - symbol: "UPS"
+    provider: "yfinance"
+    alias: "United Parcel Service"
+  - symbol: "FDX"
+    provider: "yfinance"
+    alias: "FedEx Corp."
+
+  # ===========================
+  # ACCIONES USA — ENERGY
+  # ===========================
+  - symbol: "XOM"
+    provider: "yfinance"
+    alias: "Exxon Mobil"
+  - symbol: "CVX"
+    provider: "yfinance"
+    alias: "Chevron Corp."
+  - symbol: "COP"
+    provider: "yfinance"
+    alias: "ConocoPhillips"
+  - symbol: "SLB"
+    provider: "yfinance"
+    alias: "Schlumberger"
+  - symbol: "OXY"
+    provider: "yfinance"
+    alias: "Occidental Petroleum"
+
+  # ===========================
+  # ACCIONES USA — MATERIALS
+  # ===========================
+  - symbol: "LIN"
+    provider: "yfinance"
+    alias: "Linde plc"
+  - symbol: "APD"
+    provider: "yfinance"
+    alias: "Air Products & Chemicals"
+  - symbol: "FCX"
+    provider: "yfinance"
+    alias: "Freeport-McMoRan"
+
+  # ===========================
+  # ACCIONES USA — UTILITIES
+  # ===========================
+  - symbol: "NEE"
+    provider: "yfinance"
+    alias: "NextEra Energy"
+  - symbol: "DUK"
+    provider: "yfinance"
+    alias: "Duke Energy"
+  - symbol: "SO"
+    provider: "yfinance"
+    alias: "Southern Company"
+
+  # ===========================
+  # ACCIONES USA — REAL ESTATE
+  # ===========================
+  - symbol: "PLD"
+    provider: "yfinance"
+    alias: "Prologis Inc."
+  - symbol: "AMT"
+    provider: "yfinance"
+    alias: "American Tower"
+  - symbol: "SPG"
+    provider: "yfinance"
+    alias: "Simon Property Group"
+  - symbol: "O"
+    provider: "yfinance"
+    alias: "Realty Income"
+
+  # ===========================
+  # ETFs — OPTIMIZADOS (SIN RUIDO)
+  # ===========================
   - symbol: "SPY"
     provider: "yfinance"
-    alias: "SPDR S&P 500 ETF"
+    alias: "S&P 500 ETF"
   - symbol: "QQQ"
     provider: "yfinance"
-    alias: "Invesco QQQ Trust"
-  
-  # Índices y volatilidad
-  - symbol: "^VIX"
+    alias: "NASDAQ-100 ETF"
+  - symbol: "IWM"
     provider: "yfinance"
-    alias: "CBOE Volatility Index"
+    alias: "Russell 2000 ETF"
+  - symbol: "XLF"
+    provider: "yfinance"
+    alias: "Financials Sector ETF"
+  - symbol: "XLK"
+    provider: "yfinance"
+    alias: "Technology Sector ETF"
+  - symbol: "XLE"
+    provider: "yfinance"
+    alias: "Energy Sector ETF"
+  - symbol: "TLT"
+    provider: "yfinance"
+    alias: "20+ Year Treasuries"
+  - symbol: "HYG"
+    provider: "yfinance"
+    alias: "High Yield Corporate Bonds"
+  - symbol: "GLD"
+    provider: "yfinance"
+    alias: "Gold ETF"
+  - symbol: "USO"
+    provider: "yfinance"
+    alias: "Crude Oil ETF"
+  - symbol: "VEA"
+    provider: "yfinance"
+    alias: "Developed Markets ex-US"
+  - symbol: "VWO"
+    provider: "yfinance"
+    alias: "Emerging Markets"
+
+  # ===========================
+  # ÍNDICES
+  # ===========================
   - symbol: "^GSPC"
     provider: "yfinance"
     alias: "S&P 500 Index"
+  - symbol: "^NDX"
+    provider: "yfinance"
+    alias: "NASDAQ-100 Index"
+  - symbol: "^DJI"
+    provider: "yfinance"
+    alias: "Dow Jones Industrial Avg"
+  - symbol: "^RUT"
+    provider: "yfinance"
+    alias: "Russell 2000 Index"
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+  - symbol: "^VVIX"
+    provider: "yfinance"
+    alias: "VIX of VIX"
+  - symbol: "^TNX"
+    provider: "yfinance"
+    alias: "US 10Y Treasury Yield"
 
+  # ===========================
+  # CRIPTO
+  # ===========================
+  - symbol: "BTC-USD"
+    provider: "yfinance"
+    alias: "Bitcoin"
+  - symbol: "ETH-USD"
+    provider: "yfinance"
+    alias: "Ethereum"
+  - symbol: "SOL-USD"
+    provider: "yfinance"
+    alias: "Solana"
+  - symbol: "ADA-USD"
+    provider: "yfinance"
+    alias: "Cardano"
+  - symbol: "DOT-USD"
+    provider: "yfinance"
+    alias: "Polkadot"
 # Configuración de retornos
 returns:
   # Ventanas de tiempo para calcular retornos
@@ -53,22 +370,41 @@ returns:
   # Umbrales para alertas (más conservadores para producción)
   thresholds:
     - window: 1
-      min_threshold: -0.04  # Alerta si cae más del 4% en 1 día
-      max_threshold: 0.04   # Alerta si sube más del 4% en 1 día
+      min_threshold: -0.1  
+      max_threshold: 0.1   
     - window: 5
-      min_threshold: -0.07  # Alerta si cae más del 7% en 5 días
-      max_threshold: 0.07   # Alerta si sube más del 7% en 5 días
+      min_threshold: -0.1  
+      max_threshold: 0.1   
     - window: 10
-      min_threshold: -0.10  # Alerta si cae más del 10% en 10 días
-      max_threshold: 0.10   # Alerta si sube más del 10% en 10 días
+      min_threshold: -0.10  
+      max_threshold: 0.10   
     - window: 20
-      min_threshold: -0.15  # Alerta si cae más del 15% en 20 días
-      max_threshold: 0.15   # Alerta si sube más del 15% en 20 días
+      min_threshold: -0.15  
+      max_threshold: 0.15   
 
 # Configuración de alertas para producción
 alerts:
-  # Cooldown más largo para evitar spam
-  cooldown_days: 3
+  # Sistema de cooldown inteligente para producción
+  cooldown:
+    base_days: 1  # Cooldown base más corto para no perder oportunidades
+    
+    # Cooldowns por magnitud del movimiento (equilibrados)
+    magnitude_cooldowns:
+      small: 0.25  # < 5%: 6 horas (sensible pero no spam)
+      medium: 1    # 5-15%: 1 día (equilibrado)
+      large: 3     # > 15%: 3 días (conservador para movimientos grandes)
+    
+    # Cooldowns por ventana de tiempo (equilibrados)
+    window_cooldowns:
+      1: 0.125 # 1 día = 3 horas (muy sensible para movimientos diarios)
+      5: 0.5   # 5 días = 12 horas (sensible para tendencias semanales)
+      10: 1    # 10 días = 1 día (equilibrado)
+      20: 2    # 20 días = 2 días (conservador para tendencias largas)
+    
+    # Cooldown progresivo (moderado para evitar spam obvio)
+    progressive_enabled: true
+    progressive_multiplier: 0.5   # Incremento moderado por alerta consecutiva
+    max_progressive_multiplier: 2.5  # Límite moderado para no ser muy restrictivo
   
   # Configuración de Telegram
   telegram:
@@ -80,12 +416,10 @@ alerts:
   # Configuración específica para alertas de caídas
   drop_alerts:
     enabled: true
-    cooldown_days: 2  # Cooldown más corto para caídas importantes
   
   # Configuración específica para alertas de subidas
   rise_alerts:
     enabled: true
-    cooldown_days: 4  # Cooldown más largo para subidas
   
   # Configuración para resumen semanal (deshabilitado en daily)
   weekly_summary:

@@ -61,14 +61,42 @@ class AlertTypeConfig:
     cooldown_days: Optional[int] = None  # Si es None, usa el global
 
 @dataclass
+class CooldownConfig:
+    """Configuración del sistema de cooldown inteligente"""
+    # Cooldown base global
+    base_days: int = 3
+    
+    # Cooldowns por magnitud del movimiento
+    magnitude_cooldowns: Dict[str, int] = field(default_factory=lambda: {
+        "small": 1,    # < 5%
+        "medium": 3,   # 5-15%
+        "large": 7,    # > 15%
+    })
+    
+    # Cooldowns por ventana de tiempo (en días)
+    window_cooldowns: Dict[int, float] = field(default_factory=lambda: {
+        1: 0.5,   # 1 día = 12 horas
+        5: 2,     # 5 días = 2 días
+        10: 3,    # 10 días = 3 días
+        20: 7,    # 20 días = 7 días
+    })
+    
+    # Cooldown progresivo (multiplicador por alertas consecutivas)
+    progressive_enabled: bool = True
+    progressive_multiplier: float = 0.5  # Incremento por alerta consecutiva
+    max_progressive_multiplier: float = 3.0  # Máximo multiplicador
+
+@dataclass
 class AlertsConfig:
-    cooldown_days: int = 7  # Cooldown global por defecto
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
+    
+    # Sistema de cooldown inteligente
+    cooldown: CooldownConfig = field(default_factory=CooldownConfig)
     
     # Configuraciones específicas por tipo
     drop_alerts: AlertTypeConfig = field(default_factory=AlertTypeConfig)
     rise_alerts: AlertTypeConfig = field(default_factory=AlertTypeConfig) 
-    weekly_summary: AlertTypeConfig = field(default_factory=lambda: AlertTypeConfig(cooldown_days=7))
+    weekly_summary: AlertTypeConfig = field(default_factory=AlertTypeConfig)
 
 @dataclass
 class Settings:
@@ -135,9 +163,24 @@ def load_settings(path: str | Path) -> Settings:
     # Configuración de alertas
     alerts_data = data.get("alerts", {})
     
+    # Configuración de cooldown inteligente
+    cooldown_data = alerts_data.get("cooldown", {})
+    cooldown_config = CooldownConfig(
+        base_days=cooldown_data.get("base_days", 3),
+        magnitude_cooldowns=cooldown_data.get("magnitude_cooldowns", {
+            "small": 1, "medium": 3, "large": 7
+        }),
+        window_cooldowns=cooldown_data.get("window_cooldowns", {
+            1: 0.5, 5: 2, 10: 3, 20: 7
+        }),
+        progressive_enabled=cooldown_data.get("progressive_enabled", True),
+        progressive_multiplier=cooldown_data.get("progressive_multiplier", 0.5),
+        max_progressive_multiplier=cooldown_data.get("max_progressive_multiplier", 3.0)
+    )
+    
     alerts_config = AlertsConfig(
-        cooldown_days=alerts_data.get("cooldown_days", 7),
         telegram=TelegramConfig(**telegram_config),
+        cooldown=cooldown_config,
         drop_alerts=AlertTypeConfig(**alerts_data.get("drop_alerts", {})),
         rise_alerts=AlertTypeConfig(**alerts_data.get("rise_alerts", {})),
         weekly_summary=AlertTypeConfig(**alerts_data.get("weekly_summary", {}))

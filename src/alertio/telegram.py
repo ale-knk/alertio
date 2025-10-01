@@ -57,7 +57,7 @@ class TelegramNotifier:
                 try:
                     error_data = e.response.json()
                     logger.error(f"Detalle del error: {error_data}")
-                except:
+                except Exception:
                     pass
             return False
         except Exception as e:
@@ -92,26 +92,189 @@ class TelegramNotifier:
     
     
     def _format_price_alert(self, alert, title: str, config) -> str:
-        """Formatea alertas de precio (caída/subida)"""
+        """Formatea alertas de precio (caída/subida) con información consolidada de todas las ventanas"""
         time_str = alert.timestamp.strftime('%Y-%m-%d %H:%M UTC')
         
-        # Información adicional del metadata
-        window = alert.metadata.get('window', 'N/A')
-        actual_return = alert.metadata.get('actual_return', 0)
-        threshold = alert.metadata.get('threshold', 0)
+        # Emojis según el tipo de alerta
+        direction_emoji = "📉" if alert.alert_type.value == "drop" else "📈"
+        trend_emoji = "🔴" if alert.alert_type.value == "drop" else "🟢"
         
-        return (
-            f"<b>{title}</b>\n\n"
-            f"💬 {alert.message}\n"
-            f"💰 Precio: <b>${alert.price:.2f}</b>\n"
-            f"📊 Ventana: {window} días\n"
-            f"📈 Retorno real: <b>{actual_return:.2%}</b>\n"
-            f"🎯 Umbral: {threshold:.2%}\n"
+        # Obtener información de ventanas violadas
+        violated_windows = alert.metadata.get('violated_windows', [])
+        total_violations = alert.metadata.get('total_violations', 0)
+        
+        # Formatear mensaje principal simplificado
+        message = (
+            f"<b>{title}</b>\n"
+            f"{'=' * 30}\n\n"
+            
+            # Información principal
+            f"{direction_emoji} <b>ALERTA DETECTADA</b>\n"
+            f"{trend_emoji} {total_violations} ventana(s) violada(s)\n\n"
+            
+            # Precio actual
+            f"💰 <b>Precio:</b> ${alert.price:.2f}\n\n"
+            
+            # Rendimientos por ventana (simplificado)
+            f"📊 <b>Rendimientos por ventana:</b>\n"
+            f"{self._format_simple_returns(alert.metadata.get('context_returns', {}), violated_windows)}\n\n"
+            
+            # Timestamp
             f"🕒 {time_str}"
         )
+        
+        return message
+    
+    def _format_simple_returns(self, context_returns: dict, violated_windows: list) -> str:
+        """Formatea los rendimientos de forma simple, destacando las ventanas violadas"""
+        if not context_returns:
+            return "   Sin datos disponibles"
+        
+        # Obtener ventanas violadas para destacarlas
+        violated_window_days = {vw['window'] for vw in violated_windows}
+        
+        # Ordenar ventanas por días
+        sorted_returns = sorted(context_returns.items())
+        
+        # Formatear cada ventana
+        lines = []
+        for window_days, return_value in sorted_returns:
+            emoji = "📈" if return_value >= 0 else "📉"
+            
+            # Destacar ventanas violadas con emoji de alerta
+            if window_days in violated_window_days:
+                emoji = "🚨"  # Alerta para ventanas violadas
+            
+            lines.append(f"   {emoji} {window_days}d: {return_value:+.1%}")
+        
+        return "\n".join(lines) if lines else "   Sin ventanas disponibles"
+    
+    def _get_market_insights(self, market_summary) -> dict:
+        """Obtiene insights del mercado basados en el resumen"""
+        if not market_summary.summary_data:
+            return {
+                'market_mood': '🟡 Sin datos',
+                'positive_symbols': 0,
+                'negative_symbols': 0,
+                'bullish_ratio': 0.0,
+                'volatility': 0.0
+            }
+        
+        return_key = f'return_{market_summary.period_days}d'
+        
+        # Calcular volatilidad (diferencia entre mejor y peor performer)
+        best_return = market_summary.best_performer.get(return_key, 0)
+        worst_return = market_summary.worst_performer.get(return_key, 0)
+        volatility = best_return - worst_return
+        
+        # Determinar tendencia general del mercado
+        positive_count = sum(1 for item in market_summary.summary_data if item.get(return_key, 0) > 0)
+        total_count = len(market_summary.summary_data)
+        bullish_ratio = positive_count / total_count if total_count > 0 else 0
+        
+        if bullish_ratio > 0.7:
+            market_mood = "🟢 Alcista"
+        elif bullish_ratio < 0.3:
+            market_mood = "🔴 Bajista"
+        else:
+            market_mood = "🟡 Mixto"
+        
+        return {
+            'market_mood': market_mood,
+            'positive_symbols': positive_count,
+            'negative_symbols': total_count - positive_count,
+            'bullish_ratio': bullish_ratio,
+            'volatility': volatility
+        }
+    
+    def _format_performance_categories(self, market_summary, return_key: str) -> str:
+        """Formatea las categorías de rendimiento"""
+        if not market_summary.summary_data:
+            return ""
+        
+        # Categorizar símbolos por tendencia (alcistas vs bajistas)
+        bullish = []    # > 0% (alcistas)
+        bearish = []    # <= 0% (bajistas)
+        
+        for data in market_summary.summary_data:
+            return_value = data.get(return_key, 0)
+            if return_value > 0:
+                bullish.append(data)
+            else:
+                bearish.append(data)
+        
+        # Ordenar cada categoría por rendimiento
+        bullish.sort(key=lambda x: x.get(return_key, 0), reverse=True)  # Alcistas: mayor primero
+        bearish.sort(key=lambda x: x.get(return_key, 0), reverse=False)  # Bajistas: menor primero (más negativo primero)
+        
+        message = "<b>📊 Distribución por tendencia:</b>\n"
+        
+        if bullish:
+            message += f"   📈 <b>Alcistas ({len(bullish)} símbolos):</b>\n"
+            for data in bullish[:5]:  # Mostrar hasta 5 alcistas
+                emoji = "🚀" if data.get(return_key, 0) > 10 else "📈"
+                message += f"      {emoji} {data['symbol']}: {data[return_key]:+.1f}%\n"
+            if len(bullish) > 5:
+                message += f"      • ... y {len(bullish) - 5} más\n"
+            message += "\n"
+        else:
+            message += "   📈 <b>Alcistas (0 símbolos):</b>\n"
+            message += "      Sin símbolos alcistas\n\n"
+        
+        if bearish:
+            message += f"   📉 <b>Bajistas ({len(bearish)} símbolos):</b>\n"
+            for data in bearish[:5]:  # Mostrar hasta 5 bajistas
+                emoji = "🔻" if data.get(return_key, 0) < -10 else "📉"
+                message += f"      {emoji} {data['symbol']}: {data[return_key]:+.1f}%\n"
+            if len(bearish) > 5:
+                message += f"      • ... y {len(bearish) - 5} más\n"
+            message += "\n"
+        else:
+            message += "   📉 <b>Bajistas (0 símbolos):</b>\n"
+            message += "      Sin símbolos bajistas\n\n"
+        
+        return message
+    
+    def _format_top_performers(self, market_summary, return_key: str) -> str:
+        """Formatea los top performers: 2 mejores en crecimiento y 2 mejores en caída"""
+        if not market_summary.summary_data:
+            return "   Sin datos disponibles"
+        
+        # Ordenar por rendimiento descendente
+        sorted_data = sorted(market_summary.summary_data, key=lambda x: x.get(return_key, 0), reverse=True)
+        
+        # Separar en positivos y negativos
+        positive_data = [item for item in sorted_data if item.get(return_key, 0) > 0]
+        negative_data = [item for item in sorted_data if item.get(return_key, 0) <= 0]
+        
+        message = ""
+        
+        # 2 mejores en crecimiento
+        if positive_data:
+            message += "   📈 <b>Mejores en crecimiento:</b>\n"
+            for i, data in enumerate(positive_data[:2]):
+                medal = "🥇" if i == 0 else "🥈"
+                message += f"      {medal} {data['symbol']}: <b>{data.get(return_key, 0):+.1f}%</b>\n"
+        else:
+            message += "   📈 <b>Mejores en crecimiento:</b>\n"
+            message += "      Sin símbolos positivos\n"
+        
+        message += "\n"
+        
+        # 2 mejores en caída (menos negativos)
+        if negative_data:
+            message += "   📉 <b>Mejores en caída:</b>\n"
+            for i, data in enumerate(negative_data[:2]):
+                medal = "🥉" if i == 0 else "🏅"
+                message += f"      {medal} {data['symbol']}: <b>{data.get(return_key, 0):+.1f}%</b>\n"
+        else:
+            message += "   📉 <b>Mejores en caída:</b>\n"
+            message += "      Sin símbolos negativos\n"
+        
+        return message
     
     def _format_market_summary(self, market_summary) -> str:
-        """Formatea resumen de mercado usando MarketSummary"""
+        """Formatea resumen de mercado usando MarketSummary con formato mejorado"""
         time_str = market_summary.timestamp.strftime('%Y-%m-%d %H:%M UTC')
         
         # Título según el tipo de período
@@ -122,23 +285,38 @@ class TelegramNotifier:
         else:
             title = f"📊 RESUMEN DEL MERCADO ({market_summary.period_days}d)"
         
+        # Obtener insights del mercado
+        insights = self._get_market_insights(market_summary)
+        
         best = market_summary.best_performer
         worst = market_summary.worst_performer
+        return_key = f'return_{market_summary.period_days}d'
         
         message = (
-            f"<b>{title}</b>\n\n"
-            f"📊 <b>Análisis de {market_summary.symbols_analyzed} símbolos</b>\n\n"
-            f"🏆 <b>Mejor performer ({market_summary.period_days}d):</b>\n"
-            f"   {best.get('symbol', 'N/A')}: <b>+{best.get(f'return_{market_summary.period_days}d', 0):.1f}%</b>\n\n"
-            f"📉 <b>Peor performer ({market_summary.period_days}d):</b>\n"
-            f"   {worst.get('symbol', 'N/A')}: <b>{worst.get(f'return_{market_summary.period_days}d', 0):.1f}%</b>\n\n"
-            f"📈 <b>Retorno promedio:</b> {market_summary.average_return:.1f}%\n\n"
+            f"<b>{title}</b>\n"
+            f"{'=' * 40}\n\n"
+            
+            # Resumen general
+            f"📊 <b>Análisis de {market_summary.symbols_analyzed} símbolos</b>\n"
+            f"📈 <b>Retorno promedio:</b> {market_summary.average_return:+.1f}%\n"
+            f"🎯 <b>Estado del mercado:</b> {insights['market_mood']}\n\n"
+            
+            # Top performers - 2 mejores en crecimiento y 2 mejores en caída
+            f"🏆 <b>TOP PERFORMERS ({market_summary.period_days}d):</b>\n"
+            f"{self._format_top_performers(market_summary, return_key)}\n"
+            
+            # Estadísticas del mercado
+            f"📊 <b>Estadísticas del mercado:</b>\n"
+            f"   • Símbolos positivos: {insights['positive_symbols']}/{market_summary.symbols_analyzed} ({insights['bullish_ratio']:.0%})\n"
+            f"   • Volatilidad: {insights['volatility']:.1f}% (rango: {worst.get(return_key, 0):.1f}% a {best.get(return_key, 0):.1f}%)\n\n"
         )
         
+        # Agregar categorías de rendimiento
+        message += self._format_performance_categories(market_summary, return_key)
+        
         # Agregar detalle de todos los símbolos si hay pocos
-        if len(market_summary.summary_data) <= 8:  # Solo mostrar detalle si hay pocos símbolos
+        if len(market_summary.summary_data) <= 10:  # Solo mostrar detalle si hay pocos símbolos
             message += "<b>📋 Detalle por símbolo:</b>\n"
-            return_key = f'return_{market_summary.period_days}d'
             for data in sorted(market_summary.summary_data, key=lambda x: x[return_key], reverse=True):
                 emoji = "📈" if data[return_key] >= 0 else "📉"
                 message += f"{emoji} {data['symbol']}: {data[return_key]:+.1f}%\n"
