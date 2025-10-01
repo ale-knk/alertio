@@ -1,14 +1,11 @@
-# src/alertio/summaries.py
-"""
-Módulo para generar resúmenes de mercado.
-Este módulo se enfoca en análisis general de mercado, no en alertas específicas.
-"""
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 import pandas as pd
 
+from alertio.config import Settings
+from alertio.telegram import build_notifier
 
 
 @dataclass
@@ -22,7 +19,6 @@ class MarketSummary:
     period_days: int
     summary_data: List[Dict[str, Any]]
     timestamp: datetime
-
 
 def analyze_market_performance(current_data: Dict[str, pd.Series], period_days: int = 20) -> MarketSummary:
     """
@@ -107,85 +103,28 @@ def generate_weekly_summary(current_data: Dict[str, pd.Series]) -> Optional[Mark
     return market_summary
 
 
-def generate_monthly_summary(current_data: Dict[str, pd.Series]) -> Optional[MarketSummary]:
+def send_weekly_summary(settings: Settings, current_data: dict[str, pd.Series]) -> bool:
     """
-    Genera un resumen mensual del mercado (usando datos de 20 días).
+    Genera y envía resumen semanal si está habilitado.
     
     Args:
-        current_data: Datos actuales por símbolo
+        settings: Configuración del sistema
+        current_data: Datos de mercado actuales
     
     Returns:
-        MarketSummary con el resumen mensual o None si no hay datos
+        bool: True si se envió correctamente, False si no
     """
-    market_summary = analyze_market_performance(current_data, period_days=20)
+    if not settings.alerts.weekly_summary.enabled:
+        return False
     
-    if market_summary.symbols_analyzed == 0:
-        return None
+    notifier = build_notifier(settings)
+    weekly_summary = generate_weekly_summary(current_data)
+    if not weekly_summary:
+        return False
     
-    # Modificar el period_name para indicar que es mensual
-    market_summary.period_name = "monthly"
+    # Enviar notificación
+    notification_sent = False
+    if notifier:
+        notification_sent = notifier.send_summary(weekly_summary)
     
-    return market_summary
-
-
-def _format_weekly_message(summary: MarketSummary) -> str:
-    """Formatea el mensaje para resumen semanal."""
-    best = summary.best_performer
-    worst = summary.worst_performer
-    
-    return (
-        f"Resumen semanal de {summary.symbols_analyzed} símbolos:\n"
-        f"📈 Mejor: {best['symbol']} (+{best[f'return_{summary.period_days}d']:.1f}%)\n"
-        f"📉 Peor: {worst['symbol']} ({worst[f'return_{summary.period_days}d']:.1f}%)\n"
-        f"📊 Promedio {summary.period_days}d: {summary.average_return:.1f}%"
-    )
-
-
-def _format_monthly_message(summary: MarketSummary) -> str:
-    """Formatea el mensaje para resumen mensual."""
-    best = summary.best_performer
-    worst = summary.worst_performer
-    
-    return (
-        f"Resumen mensual de {summary.symbols_analyzed} símbolos:\n"
-        f"📈 Mejor: {best['symbol']} (+{best[f'return_{summary.period_days}d']:.1f}%)\n"
-        f"📉 Peor: {worst['symbol']} ({worst[f'return_{summary.period_days}d']:.1f}%)\n"
-        f"📊 Promedio mensual: {summary.average_return:.1f}%"
-    )
-
-
-def get_market_insights(current_data: Dict[str, pd.Series]) -> Dict[str, Any]:
-    """
-    Genera insights adicionales del mercado.
-    
-    Returns:
-        Diccionario con insights como volatilidad, tendencias, etc.
-    """
-    summary = analyze_market_performance(current_data)
-    
-    if summary.symbols_analyzed == 0:
-        return {}
-    
-    # Calcular volatilidad (diferencia entre mejor y peor performer)
-    volatility = summary.best_performer[f'return_{summary.period_days}d'] - summary.worst_performer[f'return_{summary.period_days}d']
-    
-    # Determinar tendencia general del mercado
-    positive_count = sum(1 for item in summary.summary_data if item[f'return_{summary.period_days}d'] > 0)
-    total_count = len(summary.summary_data)
-    bullish_ratio = positive_count / total_count if total_count > 0 else 0
-    
-    if bullish_ratio > 0.7:
-        market_mood = "🟢 Alcista"
-    elif bullish_ratio < 0.3:
-        market_mood = "🔴 Bajista"
-    else:
-        market_mood = "🟡 Mixto"
-    
-    return {
-        'volatility': volatility,
-        'bullish_ratio': bullish_ratio,
-        'market_mood': market_mood,
-        'positive_symbols': positive_count,
-        'negative_symbols': total_count - positive_count,
-        'avg_return': summary.average_return
-    }
+    return notification_sent or notifier is None

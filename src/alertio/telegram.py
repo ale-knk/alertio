@@ -5,10 +5,16 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 from datetime import datetime
+from alertio.config import Settings
 
 
 logger = logging.getLogger(__name__)
 
+def build_notifier(settings: Settings) -> TelegramNotifier | None:
+    tg = settings.alerts.telegram
+    if tg.enabled and tg.bot_token and tg.chat_id:
+        return TelegramNotifier(bot_token=tg.bot_token, chat_id=tg.chat_id, parse_mode=tg.parse_mode)
+    return None 
 
 @dataclass
 class TelegramNotifier:

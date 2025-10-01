@@ -9,9 +9,8 @@ from alertio.config import Settings
 from alertio.summaries import generate_weekly_summary
 from alertio.types import AlertType
 from alertio.sqlite import SQLiteStore
-from alertio.telegram import TelegramNotifier
 from alertio.cooldown import create_cooldown_manager
-
+from alertio.telegram import build_notifier
 
 @dataclass
 class Alert:
@@ -135,11 +134,7 @@ def scan_for_alerts(symbol: str, row: pd.Series, *,
 
     return alerts
 
-def build_notifier(settings: Settings) -> TelegramNotifier | None:
-    tg = settings.alerts.telegram
-    if tg.enabled and tg.bot_token and tg.chat_id:
-        return TelegramNotifier(bot_token=tg.bot_token, chat_id=tg.chat_id, parse_mode=tg.parse_mode)
-    return None
+
 
 def prepare_alerts(settings: Settings, current_data: dict[str, pd.Series]) -> List[Alert]:
     """Prepara alertas basadas en umbrales de retornos configurados"""
@@ -227,28 +222,3 @@ def _is_alert_type_enabled(settings: Settings, alert_type: AlertType) -> bool:
         return True
 
 
-def send_weekly_summary(settings: Settings, current_data: dict[str, pd.Series]) -> bool:
-    """
-    Genera y envía resumen semanal si está habilitado.
-    
-    Args:
-        settings: Configuración del sistema
-        current_data: Datos de mercado actuales
-    
-    Returns:
-        bool: True si se envió correctamente, False si no
-    """
-    if not settings.alerts.weekly_summary.enabled:
-        return False
-    
-    notifier = build_notifier(settings)
-    weekly_summary = generate_weekly_summary(current_data)
-    if not weekly_summary:
-        return False
-    
-    # Enviar notificación
-    notification_sent = False
-    if notifier:
-        notification_sent = notifier.send_summary(weekly_summary)
-    
-    return notification_sent or notifier is None

@@ -1,7 +1,6 @@
 # src/alertio/cli.py
 from __future__ import annotations
 import argparse
-from pathlib import Path
 import pandas as pd
 
 from alertio.config import load_settings
@@ -9,6 +8,7 @@ from alertio.fetcher import fetch_batch, compute_returns
 from alertio.sqlite import SQLiteStore
 from alertio.alerts import prepare_alerts, send_and_log_alerts
 from alertio.opportunities import analyze_opportunities, format_opportunity_message
+from alertio.summaries import send_weekly_summary
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser("alertio")
@@ -125,7 +125,6 @@ def cmd_weekly_summary(ns) -> int:
     settings, current_data = load_data(ns.config, return_windows=[1, 5, 10, 20])
     
     # Generar y enviar resumen semanal directamente (sin cooldown para comandos manuales)
-    from alertio.alerts import send_weekly_summary
     summary_sent = send_weekly_summary(settings, current_data)
     
     if summary_sent:
@@ -168,7 +167,6 @@ def cmd_opportunity_scan(ns) -> int:
         print(f"  • Mejor oportunidad: {summary.best_opportunity.symbol} (Score: {summary.best_opportunity.opportunity_score:.0f})")
     
     return 0
-
 
 def _print_alerts_summary(alerts, sent_count):
     """Imprime resumen de alertas por tipo"""
