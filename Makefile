@@ -225,3 +225,37 @@ undeploy-keep-data: ## Undeploy manteniendo datos (logs y base de datos)
 	@echo "$(BLUE)Iniciando undeploy...$(NC)"
 	@./deployment/undeploy.sh $(DROPLET_IP) --keep-data
 	@echo "$(GREEN)✅ Undeploy completado (datos preservados)$(NC)"
+
+##@ Tests Unitarios
+
+test: ## Ejecutar todos los tests con pytest
+	@echo "$(BLUE)🧪 Ejecutando tests con pytest$(NC)"
+	poetry run pytest
+
+test-v: ## Ejecutar tests con salida verbose
+	@echo "$(BLUE)🧪 Ejecutando tests (verbose)$(NC)"
+	poetry run pytest -v
+
+test-cov: ## Ejecutar tests con reporte de cobertura
+	@echo "$(BLUE)🧪 Ejecutando tests con cobertura$(NC)"
+	poetry run pytest --cov=src/alertio --cov-report=term-missing --cov-report=html
+	@echo "$(GREEN)✅ Reporte HTML generado en: htmlcov/index.html$(NC)"
+
+test-cooldown: ## Ejecutar solo tests del módulo cooldown
+	@echo "$(BLUE)🧪 Ejecutando tests de cooldown$(NC)"
+	poetry run pytest tests/test_cooldown.py -v
+
+test-watch: ## Ejecutar tests en modo watch (requiere pytest-watch)
+	@echo "$(BLUE)🧪 Ejecutando tests en modo watch$(NC)"
+	poetry run ptw
+
+install-dev: ## Instalar dependencias de desarrollo
+	@echo "$(BLUE)📦 Instalando dependencias de desarrollo$(NC)"
+	poetry install --with dev
+	@echo "$(GREEN)✅ Dependencias instaladas$(NC)"
+
+clean-test: ## Limpiar archivos generados por tests
+	@echo "$(BLUE)🧹 Limpiando archivos de test...$(NC)"
+	@rm -rf .pytest_cache htmlcov .coverage
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@echo "$(GREEN)✅ Archivos de test limpiados$(NC)"

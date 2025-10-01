@@ -166,8 +166,8 @@ class SQLiteStore:
             )
             return {row["alert_type"]: row["count"] for row in cur.fetchall()}
 
-    def count_consecutive_alerts(self, symbol: str, rule_key: str, days: int = 30) -> int:
-        """Cuenta alertas consecutivas para un símbolo+regla en los últimos N días."""
+    def count_consecutive_alerts(self, symbol: str, rule_key: str, days: int = 14) -> int:
+        """Cuenta alertas consecutivas para un símbolo+regla en los últimos N días (default: 14)."""
         cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         with self._conn() as con:
             cur = con.execute(
@@ -196,8 +196,8 @@ class SQLiteStore:
                     "last_alert_data": None
                 }
             
-            # Contar alertas consecutivas en los últimos 30 días
-            consecutive_count = self.count_consecutive_alerts(symbol, rule_key, 30)
+            # Contar alertas consecutivas en los últimos 14 días (reducido de 30 para ser menos agresivo)
+            consecutive_count = self.count_consecutive_alerts(symbol, rule_key, 14)
             
             return {
                 "last_alert_time": datetime.fromisoformat(

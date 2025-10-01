@@ -364,23 +364,30 @@ tickers:
     alias: "Polkadot"
 # Configuración de retornos
 returns:
-  # Ventanas de tiempo para calcular retornos
-  windows: [1, 5, 10, 20]
+  # Ventanas de tiempo para calcular retornos (corto a largo plazo)
+  windows: [1, 5, 10, 20, 30, 60]
   
-  # Umbrales para alertas (más conservadores para producción)
+  # Umbrales para alertas (calibrados por ventana de tiempo)
+  # Regla: ventanas más largas requieren umbrales más altos
   thresholds:
     - window: 1
-      min_threshold: -0.1  
-      max_threshold: 0.1   
+      min_threshold: -0.1   # -10% en 1 día: movimiento significativo
+      max_threshold: 0.1    # +10% en 1 día
     - window: 5
-      min_threshold: -0.1  
-      max_threshold: 0.1   
+      min_threshold: -0.1   # -10% en 5 días: semana volátil
+      max_threshold: 0.1    # +10% en 5 días
     - window: 10
-      min_threshold: -0.10  
-      max_threshold: 0.10   
+      min_threshold: -0.10  # -10% en 10 días: 2 semanas de caída
+      max_threshold: 0.10   # +10% en 10 días
     - window: 20
-      min_threshold: -0.15  
-      max_threshold: 0.15   
+      min_threshold: -0.15  # -15% en 20 días: mes de caída sostenida
+      max_threshold: 0.15   # +15% en 20 días
+    - window: 30
+      min_threshold: -0.20  # -20% en 30 días: tendencia bajista mensual
+      max_threshold: 0.20   # +20% en 30 días: tendencia alcista mensual
+    - window: 60
+      min_threshold: -0.25  # -25% en 60 días: cambio de tendencia trimestral
+      max_threshold: 0.25   # +25% en 60 días: rally trimestral   
 
 # Configuración de alertas para producción
 alerts:
@@ -394,17 +401,20 @@ alerts:
       medium: 1    # 5-15%: 1 día (equilibrado)
       large: 3     # > 15%: 3 días (conservador para movimientos grandes)
     
-    # Cooldowns por ventana de tiempo (equilibrados)
+    # Cooldowns por ventana de tiempo (equilibrados por duración)
     window_cooldowns:
       1: 0.125 # 1 día = 3 horas (muy sensible para movimientos diarios)
       5: 0.5   # 5 días = 12 horas (sensible para tendencias semanales)
       10: 1    # 10 días = 1 día (equilibrado)
       20: 2    # 20 días = 2 días (conservador para tendencias largas)
+      30: 7    # 30 días = 7 días (1 semana para tendencias mensuales)
+      60: 14   # 60 días = 14 días (2 semanas para tendencias trimestrales)
     
-    # Cooldown progresivo (moderado para evitar spam obvio)
+    # Cooldown progresivo (OPTIMIZADO - no perder alertas importantes)
     progressive_enabled: true
-    progressive_multiplier: 0.5   # Incremento moderado por alerta consecutiva
-    max_progressive_multiplier: 2.5  # Límite moderado para no ser muy restrictivo
+    progressive_multiplier: 0.2   # Incremento suave (antes: 0.5, 60% menos agresivo)
+    max_progressive_multiplier: 1.5  # Límite suave (antes: 2.5)
+    # NOTA: Movimientos >20% ignoran automáticamente el progresivo (código actualizado)
   
   # Configuración de Telegram
   telegram:

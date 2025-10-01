@@ -57,7 +57,7 @@ class SmartCooldownManager:
         window_cooldown = self._get_window_cooldown(alert)
         
         # Calcular cooldown progresivo
-        progressive_multiplier = self._get_progressive_multiplier(consecutive_alerts)
+        progressive_multiplier = self._get_progressive_multiplier(consecutive_alerts, alert)
         
         # Usar el mayor de los cooldowns base
         base_cooldown = max(magnitude_cooldown, window_cooldown)
@@ -130,10 +130,16 @@ class SmartCooldownManager:
         
         return base_cooldown * violation_multiplier
     
-    def _get_progressive_multiplier(self, consecutive_alerts: int) -> float:
+    def _get_progressive_multiplier(self, consecutive_alerts: int, alert=None) -> float:
         """Calcula multiplicador progresivo basado en alertas consecutivas"""
         if not self.config.progressive_enabled or consecutive_alerts <= 0:
             return 1.0
+        
+        # NUEVO: Movimientos extremos (>20%) ignoran el progresivo para no perder alertas importantes
+        if alert is not None:
+            max_severity = alert.metadata.get('max_severity', 0)
+            if max_severity >= 0.20:  # Movimiento extremo (20%+)
+                return 1.0  # Sin multiplicador progresivo
         
         multiplier = 1.0 + (consecutive_alerts * self.config.progressive_multiplier)
         return min(multiplier, self.config.max_progressive_multiplier)
