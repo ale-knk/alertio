@@ -31,6 +31,11 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
+markers = [
+    "cli: pruebas funcionales de los comandos principales de la CLI",
+    "config: validaciones de archivos de configuración",
+    "telegram: pruebas funcionales que requieren credenciales de Telegram",
+]
 
 [tool.coverage.run]
 source = ["src/alertio"]

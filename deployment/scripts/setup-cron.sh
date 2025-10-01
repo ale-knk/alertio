@@ -31,10 +31,16 @@ if [[ ! -f "$REMOTE_DIR/deployment/scripts/run-weekly.sh" ]]; then
     exit 1
 fi
 
+if [[ ! -f "$REMOTE_DIR/deployment/scripts/run-opportunity.sh" ]]; then
+    echo "Error: No se encuentra $REMOTE_DIR/deployment/scripts/run-opportunity.sh"
+    exit 1
+fi
+
 # Hacer ejecutables los scripts
 log "Haciendo ejecutables los scripts..."
 chmod +x "$REMOTE_DIR/deployment/scripts/run-daily.sh"
 chmod +x "$REMOTE_DIR/deployment/scripts/run-weekly.sh"
+chmod +x "$REMOTE_DIR/deployment/scripts/run-opportunity.sh"
 success "✓ Scripts configurados como ejecutables"
 
 # Configurar cron jobs
@@ -55,6 +61,9 @@ cat >> "$TEMP_CRON" << EOF
 # # Alertio - Weekly summary: cada minuto para pruebas
 # * * * * * $REMOTE_DIR/deployment/scripts/run-weekly.sh
 
+# # Alertio - Opportunity scan: cada minuto para pruebas
+# * * * * * $REMOTE_DIR/deployment/scripts/run-opportunity.sh
+
 # ===== CONFIGURACIÓN DE PRODUCCIÓN =====
 # Alertio - Daily run: 3 veces al día sincronizado con mercados americanos
 # 8:00 AM Madrid - Análisis previo (2:00 AM ET, mercado cerrado)
@@ -66,6 +75,9 @@ cat >> "$TEMP_CRON" << EOF
 
 # Alertio - Weekly summary: domingos a las 10:00 AM (Europe/Madrid)
 0 10 * * 0 $REMOTE_DIR/deployment/scripts/run-weekly.sh
+
+# Alertio - Opportunity scan: lunes, miércoles y viernes a las 9:00 AM (Europe/Madrid)
+0 9 * * 1,3,5 $REMOTE_DIR/deployment/scripts/run-opportunity.sh
 EOF
 
 # Instalar nuevo crontab para root (más simple)

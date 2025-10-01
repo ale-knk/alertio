@@ -1,0 +1,75 @@
+# Configuración de test para comando opportunity-scan
+# Optimizada para análisis de oportunidades de entrada
+
+# Días de historial para cálculos
+lookback_days: 100
+
+# Tickers de test (selección para oportunidades)
+tickers:
+  # Tech volátiles (más propensos a oportunidades)
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  - symbol: "NVDA"
+    provider: "yfinance"
+    alias: "NVIDIA Corp."
+  - symbol: "META"
+    provider: "yfinance"
+    alias: "Meta Platforms Inc."
+  
+  # Financieros
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "BAC"
+    provider: "yfinance"
+    alias: "Bank of America"
+  - symbol: "GS"
+    provider: "yfinance"
+    alias: "Goldman Sachs"
+  
+  # ETFs principales
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "NASDAQ-100 ETF"
+  - symbol: "XLF"
+    provider: "yfinance"
+    alias: "Financials Sector ETF"
+  - symbol: "XLK"
+    provider: "yfinance"
+    alias: "Technology Sector ETF"
+  
+  # Índices
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+
+# Configuración de retornos para análisis de oportunidades
+returns:
+  windows: [5, 10, 20, 30]
+  thresholds:
+    - window: 5
+      min_threshold: -0.03   # -3% en 5 días (sensible para test)
+    - window: 10
+      min_threshold: -0.05   # -5% en 10 días
+    - window: 20
+      min_threshold: -0.08   # -8% en 20 días
+    - window: 30
+      min_threshold: -0.10   # -10% en 30 días
+
+# Configuración de alertas (solo para notificaciones, no para DB)
+alerts:
+  telegram:
+    enabled: false  # Deshabilitado para tests
+    bot_token: "test_token"
+    chat_id: "test_chat"
+    parse_mode: "HTML"

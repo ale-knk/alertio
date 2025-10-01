@@ -9,7 +9,7 @@ from freezegun import freeze_time
 
 from alertio.cooldown import SmartCooldownManager, CooldownResult, CooldownConfig
 from alertio.types import AlertType
-from tests.conftest import create_alert
+from .conftest import create_alert
 
 
 class TestCooldownBasics:

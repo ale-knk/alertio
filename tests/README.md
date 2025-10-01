@@ -1,15 +1,34 @@
 # Tests de Alertio
 
-Suite de tests completa para el proyecto Alertio, con enfoque especial en el sistema de cooldown inteligente.
+Suite de tests completa para el proyecto Alertio, organizada en tests unitarios y funcionales.
 
 ## 📋 Estructura
 
 ```
 tests/
-├── __init__.py           # Inicialización del paquete de tests
-├── conftest.py           # Configuración compartida y fixtures
-├── test_cooldown.py      # Tests del sistema de cooldown (🎯 prioritario)
-└── README.md            # Este archivo
+├── unit/
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_cooldown.py
+├── functional/
+│   ├── __init__.py
+│   ├── cli/
+│   │   ├── __init__.py
+│   │   └── test_commands.py
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── test_configs.py
+│   ├── telegram/
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   └── test_integration.py
+│   ├── conftest.py
+│   └── utils.py
+├── configs/
+│   └── test-*.yaml
+├── reports/
+│   └── functional_test_report_*.json
+└── README.md
 ```
 
 ## 🚀 Ejecutar Tests
@@ -27,24 +46,16 @@ make install-dev
 ### Comandos básicos
 
 ```bash
-# Ejecutar todos los tests
-make test
-poetry run pytest
+# Tests unitarios (pytest)
+make test                    # Ejecutar todos los tests unitarios
+make test-v                  # Tests con salida verbose
+make test-cov                # Tests con cobertura de código
+make test-cooldown           # Solo tests de cooldown
 
-# Tests con salida verbose
-make test-v
-poetry run pytest -v
-
-# Tests con cobertura de código
-make test-cov
-poetry run pytest --cov=src/alertio --cov-report=term-missing --cov-report=html
-
-# Solo tests de cooldown
-make test-cooldown
-poetry run pytest tests/test_cooldown.py -v
-
-# Tests de un método específico
-poetry run pytest tests/test_cooldown.py::TestMagnitudeCooldown::test_large_magnitude_cooldown -v
+# Functional tests
+poetry run pytest tests/functional -m cli
+poetry run pytest tests/functional -m telegram
+poetry run pytest tests/functional -m config
 ```
 
 ## 📊 Cobertura de Código

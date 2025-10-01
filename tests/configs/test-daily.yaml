@@ -1,0 +1,89 @@
+# Configuración de test para comando daily-run
+# Optimizada para pipeline completo de pruebas
+
+# Días de historial para cálculos
+lookback_days: 100
+
+# Tickers de test (selección balanceada)
+tickers:
+  # Tech principales
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  
+  # Financieros
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "V"
+    provider: "yfinance"
+    alias: "Visa Inc."
+  - symbol: "MA"
+    provider: "yfinance"
+    alias: "Mastercard Inc."
+  
+  # ETFs
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "NASDAQ-100 ETF"
+  - symbol: "XLF"
+    provider: "yfinance"
+    alias: "Financials Sector ETF"
+
+# Configuración de retornos (equilibrada para daily-run)
+returns:
+  windows: [1, 5, 10, 20]
+  thresholds:
+    - window: 1
+      min_threshold: -0.05   # -5% en 1 día
+      max_threshold: 0.05    # +5% en 1 día
+    - window: 5
+      min_threshold: -0.08   # -8% en 5 días
+      max_threshold: 0.08    # +8% en 5 días
+    - window: 10
+      min_threshold: -0.10   # -10% en 10 días
+      max_threshold: 0.10    # +10% en 10 días
+    - window: 20
+      min_threshold: -0.15   # -15% en 20 días
+      max_threshold: 0.15    # +15% en 20 días
+
+# Configuración de alertas para daily-run
+alerts:
+  telegram:
+    enabled: false  # Deshabilitado para tests
+    bot_token: "test_token"
+    chat_id: "test_chat"
+    parse_mode: "HTML"
+  
+  # Cooldown corto para tests
+  cooldown:
+    base_days: 0.1
+    magnitude_cooldowns:
+      small: 0.05
+      medium: 0.1
+      large: 0.2
+    window_cooldowns:
+      1: 0.05
+      5: 0.1
+      10: 0.15
+      20: 0.2
+    progressive_enabled: false
+  
+  drop_alerts:
+    enabled: true
+  rise_alerts:
+    enabled: true
+  weekly_summary:
+    enabled: false  # Se puede habilitar con --include-weekly

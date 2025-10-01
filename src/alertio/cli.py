@@ -8,6 +8,7 @@ from alertio.config import load_settings
 from alertio.fetcher import fetch_batch, compute_returns
 from alertio.sqlite import SQLiteStore
 from alertio.alerts import prepare_alerts, send_and_log_alerts
+from alertio.opportunities import analyze_opportunities, format_opportunity_message
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser("alertio")
@@ -15,7 +16,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_run = sub.add_parser("scan", help="Fetch data and print latest market data")
     p_run.add_argument("-c", "--config", type=str, required=True)
-    p_run.add_argument("--csv-out", type=str, default=None)
 
     p_alert = sub.add_parser("alert", help="Evaluate rules and send alerts via Telegram, with cooldown")
     p_alert.add_argument("-c", "--config", type=str, required=True)
@@ -24,12 +24,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_daily = sub.add_parser("daily-run", help="Fetch → evaluate → alert (full pipeline)")
     p_daily.add_argument("-c", "--config", type=str, required=True)
     p_daily.add_argument("--db", type=str, default="data/alerts.sqlite3")
-    p_daily.add_argument("--csv-out", type=str, default=None)
     p_daily.add_argument("--include-weekly", action="store_true", help="Incluir resumen semanal")
     
     p_weekly = sub.add_parser("weekly-summary", help="Generar solo resumen semanal")
     p_weekly.add_argument("-c", "--config", type=str, required=True)
     p_weekly.add_argument("--db", type=str, default="data/alerts.sqlite3")
+    
+    p_opportunity = sub.add_parser("opportunity-scan", help="Analizar oportunidades de entrada basadas en caídas de precio")
+    p_opportunity.add_argument("-c", "--config", type=str, required=True)
+    p_opportunity.add_argument("--threshold", type=float, default=-0.05, help="Umbral mínimo de caída para considerar oportunidad (ej. -0.05 = -5%)")
+    p_opportunity.add_argument("--windows", type=int, nargs="+", default=[5, 10, 20], help="Ventanas de tiempo a analizar en días")
+    p_opportunity.add_argument("--min-windows", type=int, default=1, help="Mínimo de ventanas que deben mostrar caídas")
     
     return p
 
@@ -91,15 +96,8 @@ def cmd_alert(ns) -> int:
     return 0
 
 def cmd_daily_run(ns) -> int:
-    # Optionally dump CSVs for inspection
-    if ns.csv_out:
-        Path(ns.csv_out).mkdir(parents=True, exist_ok=True)
     # Cargar datos con ventanas de configuración para alertas
     settings, current_data = load_data(ns.config)
-    if ns.csv_out:
-        # write per-symbol returns snapshot
-        for sym, row in current_data.items():
-            pd.DataFrame(row).to_csv(Path(ns.csv_out) / f"{sym.replace('^','')}_current.csv", header=False)
     store = SQLiteStore.open(ns.db)
     
     # Generar alertas normales
@@ -110,7 +108,7 @@ def cmd_daily_run(ns) -> int:
     include_weekly = getattr(ns, 'include_weekly', False)
     if include_weekly:
         from alertio.alerts import send_weekly_summary
-        summary_sent = send_weekly_summary(settings, current_data, store)
+        summary_sent = send_weekly_summary(settings, current_data)
         if summary_sent:
             sent += 1  # Contar el resumen como enviado
     
@@ -136,6 +134,41 @@ def cmd_weekly_summary(ns) -> int:
     else:
         print("❌ Error enviando resumen semanal o no hay datos suficientes")
         return 1
+
+def cmd_opportunity_scan(ns) -> int:
+    """Comando para analizar oportunidades de entrada"""
+    # Cargar datos con las ventanas especificadas
+    settings, current_data = load_data(ns.config, return_windows=ns.windows)
+    
+    # Analizar oportunidades
+    summary = analyze_opportunities(
+        current_data,
+        analysis_windows=ns.windows,
+        min_drop_threshold=ns.threshold,
+        min_windows_required=ns.min_windows
+    )
+    
+    # Mostrar resultados
+    if summary.opportunities_found == 0:
+        print("🎯 No se encontraron oportunidades de entrada significativas")
+        print(f"📊 Analizados {summary.total_analyzed} activos")
+        print(f"📉 Umbral mínimo: {ns.threshold:.1%}")
+        print(f"⏰ Ventanas: {', '.join(map(str, ns.windows))}d")
+        return 0
+    
+    # Mostrar resumen en consola
+    print(format_opportunity_message(summary))
+    
+    # Mostrar estadísticas adicionales
+    print("\n📊 Estadísticas:")
+    print(f"  • Activos analizados: {summary.total_analyzed}")
+    print(f"  • Oportunidades encontradas: {summary.opportunities_found}")
+    print(f"  • Caída promedio: {summary.average_drop:.1%}")
+    if summary.best_opportunity:
+        print(f"  • Mejor oportunidad: {summary.best_opportunity.symbol} (Score: {summary.best_opportunity.opportunity_score:.0f})")
+    
+    return 0
+
 
 def _print_alerts_summary(alerts, sent_count):
     """Imprime resumen de alertas por tipo"""
@@ -167,6 +200,8 @@ def main(args: list[str] | None = None) -> int:
         return cmd_daily_run(ns)
     if ns.cmd == "weekly-summary":
         return cmd_weekly_summary(ns)
+    if ns.cmd == "opportunity-scan":
+        return cmd_opportunity_scan(ns)
     return 0
 
 if __name__ == "__main__":

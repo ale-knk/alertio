@@ -1,0 +1,59 @@
+# Configuración de test para probar integración con Telegram
+# Este archivo habilita las notificaciones de Telegram para testing
+
+# Días de historial para cálculos
+lookback_days: 30
+
+# Tickers de test (pocos para evitar spam)
+tickers:
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+
+# Configuración de retornos
+returns:
+  windows: [1, 5, 10]
+  thresholds:
+    - window: 1
+      min_threshold: -0.02
+      max_threshold: 0.02
+    - window: 5
+      min_threshold: -0.05
+      max_threshold: 0.05
+    - window: 10
+      min_threshold: -0.08
+      max_threshold: 0.08
+
+# Configuración de alertas
+alerts:
+  telegram:
+    enabled: true
+    # Estas variables deben estar en el entorno:
+    # TELEGRAM_BOT_TOKEN=tu_bot_token
+    # TELEGRAM_CHAT_ID=tu_chat_id
+    bot_token: null  # Se toma de TELEGRAM_BOT_TOKEN
+    chat_id: null    # Se toma de TELEGRAM_CHAT_ID
+    parse_mode: "HTML"
+  
+  # Configuración por tipo de alerta
+  drop:
+    enabled: true
+    cooldown_hours: 24
+    progressive_cooldown: true
+    magnitude_cooldown: true
+  
+  rise:
+    enabled: true
+    cooldown_hours: 24
+    progressive_cooldown: true
+    magnitude_cooldown: true
+
+# Configuración de resumen semanal
+weekly_summary:
+  enabled: true
+  day_of_week: "monday"  # Lunes
+  time: "09:00"
+  include_telegram: true

@@ -1,0 +1,58 @@
+# Configuración de test para comando scan
+# Optimizada para pruebas funcionales con datos reales
+
+# Días de historial para cálculos (mínimo para tests)
+lookback_days: 50
+
+# Tickers de test (selección pequeña pero representativa)
+tickers:
+  # Tech principales
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  
+  # Financieros
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "V"
+    provider: "yfinance"
+    alias: "Visa Inc."
+  
+  # ETFs principales
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "NASDAQ-100 ETF"
+  
+  # Índices
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+
+# Configuración de retornos (básica para scan)
+returns:
+  windows: [1, 5, 10, 20]
+  thresholds: []  # No necesarios para scan
+
+# Configuración de alertas (deshabilitada para scan)
+alerts:
+  telegram:
+    enabled: false
+  drop_alerts:
+    enabled: false
+  rise_alerts:
+    enabled: false
+  weekly_summary:
+    enabled: false

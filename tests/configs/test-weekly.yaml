@@ -1,0 +1,69 @@
+# Configuración de test para comando weekly-summary
+# Optimizada para resúmenes semanales
+
+# Días de historial para cálculos
+lookback_days: 150
+
+# Tickers de test (selección para resúmenes)
+tickers:
+  # Tech principales
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "MSFT"
+    provider: "yfinance"
+    alias: "Microsoft Corp."
+  - symbol: "GOOGL"
+    provider: "yfinance"
+    alias: "Alphabet Inc."
+  - symbol: "AMZN"
+    provider: "yfinance"
+    alias: "Amazon.com Inc."
+  
+  # Financieros
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "V"
+    provider: "yfinance"
+    alias: "Visa Inc."
+  - symbol: "MA"
+    provider: "yfinance"
+    alias: "Mastercard Inc."
+  
+  # ETFs principales
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "NASDAQ-100 ETF"
+  - symbol: "IWM"
+    provider: "yfinance"
+    alias: "Russell 2000 ETF"
+  
+  # Índices
+  - symbol: "^GSPC"
+    provider: "yfinance"
+    alias: "S&P 500 Index"
+  - symbol: "^NDX"
+    provider: "yfinance"
+    alias: "NASDAQ-100 Index"
+  - symbol: "^VIX"
+    provider: "yfinance"
+    alias: "CBOE Volatility Index"
+
+# Configuración de retornos (solo ventanas, sin thresholds para weekly)
+returns:
+  windows: [1, 5, 10, 20]
+
+# Configuración de alertas para weekly-summary
+alerts:
+  telegram:
+    enabled: false  # Deshabilitado para tests
+    bot_token: "test_token"
+    chat_id: "test_chat"
+    parse_mode: "HTML"
+  
+  weekly_summary:
+    enabled: true

@@ -1,0 +1,80 @@
+# Configuración de test para comando alert
+# Optimizada para generar alertas de prueba
+
+# Días de historial para cálculos
+lookback_days: 100
+
+# Tickers de test (selección que pueda generar alertas)
+tickers:
+  # Tech volátiles
+  - symbol: "AAPL"
+    provider: "yfinance"
+    alias: "Apple Inc."
+  - symbol: "TSLA"
+    provider: "yfinance"
+    alias: "Tesla Inc."
+  - symbol: "NVDA"
+    provider: "yfinance"
+    alias: "NVIDIA Corp."
+  
+  # Financieros
+  - symbol: "JPM"
+    provider: "yfinance"
+    alias: "JPMorgan Chase"
+  - symbol: "BAC"
+    provider: "yfinance"
+    alias: "Bank of America"
+  
+  # ETFs
+  - symbol: "SPY"
+    provider: "yfinance"
+    alias: "S&P 500 ETF"
+  - symbol: "QQQ"
+    provider: "yfinance"
+    alias: "NASDAQ-100 ETF"
+
+# Configuración de retornos con umbrales bajos para generar alertas
+returns:
+  windows: [1, 5, 10, 20]
+  thresholds:
+    - window: 1
+      min_threshold: -0.02   # -2% en 1 día (muy sensible para test)
+      max_threshold: 0.02    # +2% en 1 día
+    - window: 5
+      min_threshold: -0.03   # -3% en 5 días
+      max_threshold: 0.03    # +3% en 5 días
+    - window: 10
+      min_threshold: -0.05   # -5% en 10 días
+      max_threshold: 0.05    # +5% en 10 días
+    - window: 20
+      min_threshold: -0.08   # -8% en 20 días
+      max_threshold: 0.08    # +8% en 20 días
+
+# Configuración de alertas (habilitada para test)
+alerts:
+  telegram:
+    enabled: false  # Deshabilitado para tests
+    bot_token: "test_token"
+    chat_id: "test_chat"
+    parse_mode: "HTML"
+  
+  # Cooldown muy corto para tests
+  cooldown:
+    base_days: 0.1  # 2.4 horas
+    magnitude_cooldowns:
+      small: 0.05   # 1.2 horas
+      medium: 0.1   # 2.4 horas
+      large: 0.2    # 4.8 horas
+    window_cooldowns:
+      1: 0.05
+      5: 0.1
+      10: 0.15
+      20: 0.2
+    progressive_enabled: false  # Deshabilitado para tests
+  
+  drop_alerts:
+    enabled: true
+  rise_alerts:
+    enabled: true
+  weekly_summary:
+    enabled: false
