@@ -1,7 +1,7 @@
 # Makefile - Alertio CLI Testing & Development
 # Uso: make <comando>
 
-.PHONY: help test test-func test-telegram clean deploy
+.PHONY: help test test-func test-telegram clean deploy prod-daily prod-weekly prod-opportunity prod-logs prod-status
 
 # Variables
 PYTHON := poetry run python
@@ -40,6 +40,13 @@ help: ## Mostrar ayuda
 	@echo "$(YELLOW)🚀 Deployment:$(NC)"
 	@echo "  make deploy        # Deploy a producción"
 	@echo "  make undeploy      # Undeploy completo"
+	@echo ""
+	@echo "$(YELLOW)🏭 Producción (ejecutar en servidor):$(NC)"
+	@echo "  make prod-daily     # Ejecutar daily-run en producción"
+	@echo "  make prod-weekly    # Ejecutar weekly-summary en producción"
+	@echo "  make prod-opportunity # Ejecutar opportunity-scan en producción"
+	@echo "  make prod-logs      # Ver logs de producción"
+	@echo "  make prod-status    # Ver estado del contenedor"
 
 ##@ Testing
 
@@ -80,7 +87,7 @@ weekly: ## Probar comando weekly-summary
 
 opportunity: ## Probar comando opportunity-scan
 	@echo "$(BLUE)🎯 Testing: alertio opportunity-scan$(NC)"
-	$(CLI) opportunity-scan -c tests/configs/test-opportunity.yaml --threshold -0.05 --windows 5 10 20
+	$(CLI) opportunity-scan -c tests/configs/test-opportunity.yaml 
 
 telegram-test: ## Probar alertas con Telegram (requiere variables de entorno)
 	@echo "$(BLUE)🤖 Testing: alertio alert con Telegram$(NC)"
@@ -133,3 +140,53 @@ undeploy: ## Undeploy completo
 	@echo "$(BLUE)Iniciando undeploy...$(NC)"
 	@./deployment/undeploy.sh $(DROPLET_IP)
 	@echo "$(GREEN)✅ Undeploy completado$(NC)"
+
+##@ Producción
+
+prod-daily: ## Ejecutar daily-run en producción
+	@echo "$(BLUE)🏭 Ejecutando daily-run en producción$(NC)"
+	@echo "IP: $(DROPLET_IP)"
+	@echo ""
+	@ssh root@$(DROPLET_IP) "cd /opt/alertio/deployment/scripts && ./run-daily.sh"
+	@echo "$(GREEN)✅ Daily-run ejecutado en producción$(NC)"
+	@echo "$(YELLOW)📋 Ver logs: ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/daily.log'$(NC)"
+
+prod-weekly: ## Ejecutar weekly-summary en producción
+	@echo "$(BLUE)🏭 Ejecutando weekly-summary en producción$(NC)"
+	@echo "IP: $(DROPLET_IP)"
+	@echo ""
+	@ssh root@$(DROPLET_IP) "cd /opt/alertio/deployment/scripts && ./run-weekly.sh"
+	@echo "$(GREEN)✅ Weekly-summary ejecutado en producción$(NC)"
+	@echo "$(YELLOW)📋 Ver logs: ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/weekly.log'$(NC)"
+
+prod-opportunity: ## Ejecutar opportunity-scan en producción
+	@echo "$(BLUE)🏭 Ejecutando opportunity-scan en producción$(NC)"
+	@echo "IP: $(DROPLET_IP)"
+	@echo ""
+	@ssh root@$(DROPLET_IP) "cd /opt/alertio/deployment/scripts && ./run-opportunity.sh"
+	@echo "$(GREEN)✅ Opportunity-scan ejecutado en producción$(NC)"
+	@echo "$(YELLOW)📋 Ver logs: ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/opportunity.log'$(NC)"
+
+prod-logs: ## Ver logs de producción
+	@echo "$(BLUE)📋 Mostrando logs de producción$(NC)"
+	@echo "IP: $(DROPLET_IP)"
+	@echo ""
+	@echo "$(YELLOW)📊 Logs disponibles:$(NC)"
+	@echo "  • daily.log      - Logs del proceso diario"
+	@echo "  • weekly.log     - Logs del resumen semanal"
+	@echo "  • opportunity.log - Logs del análisis de oportunidades"
+	@echo ""
+	@echo "$(YELLOW)🔍 Comandos útiles:$(NC)"
+	@echo "  ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/daily.log'"
+	@echo "  ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/weekly.log'"
+	@echo "  ssh root@$(DROPLET_IP) 'tail -f /opt/alertio/logs/opportunity.log'"
+	@echo "  ssh root@$(DROPLET_IP) 'ls -la /opt/alertio/logs/'"
+
+prod-status: ## Ver estado del contenedor en producción
+	@echo "$(BLUE)🔍 Verificando estado del contenedor$(NC)"
+	@echo "IP: $(DROPLET_IP)"
+	@echo ""
+	@ssh root@$(DROPLET_IP) "cd /opt/alertio/deployment/docker && docker-compose ps"
+	@echo ""
+	@echo "$(YELLOW)📊 Información adicional:$(NC)"
+	@ssh root@$(DROPLET_IP) "cd /opt/alertio/deployment/docker && docker-compose logs --tail=10 alertio"
