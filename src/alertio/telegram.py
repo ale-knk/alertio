@@ -96,6 +96,16 @@ class TelegramNotifier:
         formatted_message = self._format_market_summary(market_summary)
         return self.send(formatted_message)
     
+    def send_opportunities(self, opportunity_summary) -> bool:
+        """
+        Envía notificación de oportunidades de entrada.
+        
+        Args:
+            opportunity_summary: Instancia de OpportunitySummary
+        """
+        formatted_message = self._format_opportunity_summary(opportunity_summary)
+        return self.send(formatted_message)
+    
     
     def _format_price_alert(self, alert, title: str, config) -> str:
         """Formatea alertas de precio (caída/subida) con información consolidada de todas las ventanas"""
@@ -331,6 +341,76 @@ class TelegramNotifier:
         message += f"🕒 {time_str}"
         
         return message
+    
+    def _format_opportunity_summary(self, opportunity_summary) -> str:
+        """Formatea resumen de oportunidades de entrada para Telegram"""
+        time_str = opportunity_summary.timestamp.strftime('%Y-%m-%d %H:%M UTC')
+        
+        if opportunity_summary.opportunities_found == 0:
+            return (
+                f"<b>🎯 ANÁLISIS DE OPORTUNIDADES</b>\n"
+                f"{'=' * 40}\n\n"
+                f"📊 <b>Análisis completado:</b> {opportunity_summary.total_analyzed} activos\n"
+                f"❌ <b>Oportunidades encontradas:</b> 0\n\n"
+                f"💡 <b>No se encontraron oportunidades de entrada significativas</b>\n"
+                f"en este momento según los criterios establecidos.\n\n"
+                f"🕒 {time_str}"
+            )
+        
+        # Encabezado con estadísticas
+        message_parts = [
+            "<b>🎯 OPORTUNIDADES DE ENTRADA</b>",
+            "=" * 40,
+            "",
+            f"📊 <b>Análisis:</b> {opportunity_summary.total_analyzed} activos | {opportunity_summary.opportunities_found} oportunidades",
+            f"📉 <b>Caída promedio:</b> {opportunity_summary.average_drop:.1%}",
+            f"⏰ <b>Ventanas analizadas:</b> {', '.join(map(str, opportunity_summary.analysis_windows))}d",
+            ""
+        ]
+        
+        # Top oportunidades (máximo 8 para no sobrecargar el mensaje)
+        top_opportunities = opportunity_summary.opportunities[:8]
+        
+        message_parts.append("<b>🏆 TOP OPORTUNIDADES:</b>")
+        
+        for i, opp in enumerate(top_opportunities, 1):
+            # Emoji según severidad
+            severity_emoji = {"high": "🥇", "medium": "🥈", "low": "🥉"}
+            emoji = severity_emoji.get(opp.severity, "📊")
+            
+            # Formatear retornos
+            returns_text = []
+            for window in sorted(opp.windows_with_drops):
+                if window in opp.returns:
+                    returns_text.append(f"{opp.returns[window]:.1%}")
+            
+            returns_str = ", ".join(returns_text)
+            
+            # Línea de oportunidad
+            opp_line = f"   {emoji} <b>{opp.symbol}:</b> {returns_str} (Score: {opp.opportunity_score:.0f})"
+            message_parts.append(opp_line)
+        
+        # Resumen final
+        if opportunity_summary.opportunities_found > 8:
+            message_parts.append(f"\n   ... y {opportunity_summary.opportunities_found - 8} oportunidades más")
+        
+        # Mejor oportunidad destacada
+        if opportunity_summary.best_opportunity:
+            best = opportunity_summary.best_opportunity
+            message_parts.extend([
+                "",
+                "<b>⭐ MEJOR OPORTUNIDAD:</b>",
+                f"   🥇 <b>{best.symbol}</b> - Score: {best.opportunity_score:.0f}",
+                f"   💰 Precio: ${best.price:.2f}",
+                f"   📉 Caídas: {', '.join(f'{best.returns[w]:.1%}' for w in sorted(best.windows_with_drops))}"
+            ])
+        
+        message_parts.extend([
+            "",
+            f"🕒 {time_str}"
+        ])
+        
+        return "\n".join(message_parts)
     
     
     def test_connection(self) -> bool:

@@ -7,7 +7,7 @@ from alertio.config import load_settings
 from alertio.fetcher import fetch_batch, compute_returns
 from alertio.sqlite import SQLiteStore
 from alertio.alerts import prepare_alerts, send_and_log_alerts
-from alertio.opportunities import analyze_opportunities, format_opportunity_message
+from alertio.opportunities import analyze_opportunities
 from alertio.summaries import send_weekly_summary
 
 def build_parser() -> argparse.ArgumentParser:
@@ -107,7 +107,6 @@ def cmd_daily_run(ns) -> int:
     # Enviar resumen semanal si se solicita
     include_weekly = getattr(ns, 'include_weekly', False)
     if include_weekly:
-        from alertio.alerts import send_weekly_summary
         summary_sent = send_weekly_summary(settings, current_data)
         if summary_sent:
             sent += 1  # Contar el resumen como enviado
@@ -147,26 +146,25 @@ def cmd_opportunity_scan(ns) -> int:
         min_windows_required=ns.min_windows
     )
     
-    # Mostrar resultados
-    if summary.opportunities_found == 0:
-        print("🎯 No se encontraron oportunidades de entrada significativas")
-        print(f"📊 Analizados {summary.total_analyzed} activos")
-        print(f"📉 Umbral mínimo: {ns.threshold:.1%}")
-        print(f"⏰ Ventanas: {', '.join(map(str, ns.windows))}d")
-        return 0
-    
-    # Mostrar resumen en consola
-    print(format_opportunity_message(summary))
-    
-    # Mostrar estadísticas adicionales
-    print("\n📊 Estadísticas:")
-    print(f"  • Activos analizados: {summary.total_analyzed}")
-    print(f"  • Oportunidades encontradas: {summary.opportunities_found}")
-    print(f"  • Caída promedio: {summary.average_drop:.1%}")
-    if summary.best_opportunity:
-        print(f"  • Mejor oportunidad: {summary.best_opportunity.symbol} (Score: {summary.best_opportunity.opportunity_score:.0f})")
-    
-    return 0
+    # Enviar notificación a Telegram si está habilitado
+    telegram_sent = False
+    if settings.alerts.telegram.enabled:
+        from alertio.telegram import build_notifier
+        notifier = build_notifier(settings)
+        if notifier:
+            telegram_sent = notifier.send_opportunities(summary)
+            if telegram_sent:
+                print("✅ Análisis de oportunidades enviado correctamente")
+                return 0
+            else:
+                print("❌ Error enviando análisis de oportunidades")
+                return 1
+        else:
+            print("❌ Telegram no configurado correctamente")
+            return 1
+    else:
+        print("❌ Notificaciones de Telegram deshabilitadas")
+        return 1
 
 def _print_alerts_summary(alerts, sent_count):
     """Imprime resumen de alertas por tipo"""
