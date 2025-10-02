@@ -4,7 +4,7 @@ import requests
 import logging
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from alertio.config import Settings
 
 
@@ -423,7 +423,7 @@ class TelegramNotifier:
         test_message = (
             "🤖 <b>Test de Conexión</b>\n\n"
             "✅ Bot de Alertio funcionando correctamente\n"
-            f"🕒 {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+            f"🕒 {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
         )
         
         return self.send(test_message)

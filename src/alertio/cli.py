@@ -147,7 +147,6 @@ def cmd_opportunity_scan(ns) -> int:
     )
     
     # Enviar notificación a Telegram si está habilitado
-    telegram_sent = False
     if settings.alerts.telegram.enabled:
         from alertio.telegram import build_notifier
         notifier = build_notifier(settings)
@@ -163,8 +162,12 @@ def cmd_opportunity_scan(ns) -> int:
             print("❌ Telegram no configurado correctamente")
             return 1
     else:
-        print("❌ Notificaciones de Telegram deshabilitadas")
-        return 1
+        # En modo test o sin Telegram, mostrar resumen básico y continuar
+        print(f"📊 Análisis completado: {summary.total_analyzed} activos, {summary.opportunities_found} oportunidades")
+        if summary.opportunities_found > 0 and summary.best_opportunity:
+            print(f"🎯 Mejor oportunidad: {summary.best_opportunity.symbol} (Score: {summary.best_opportunity.opportunity_score:.0f})")
+        print("ℹ️  Notificaciones de Telegram deshabilitadas")
+        return 0
 
 def _print_alerts_summary(alerts, sent_count):
     """Imprime resumen de alertas por tipo"""
